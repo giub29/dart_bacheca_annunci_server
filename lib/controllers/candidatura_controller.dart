@@ -30,7 +30,55 @@ class CandidaturaController {
       _create,
     );
 
+    router.get(
+      '/api/annunci/<id>/candidature',
+      (Request request, String id) {
+        return guard(
+          (Request authenticatedRequest) {
+            return _list(authenticatedRequest, id);
+          },
+        )(request);
+      },
+    );
+
     return router;
+  }
+
+  Response _list(Request request, String id) {
+    final azienda = currentAzienda(request)!;
+
+    final annuncioId = int.tryParse(id);
+
+    if (annuncioId == null || annuncioId <= 0) {
+      throw const ApiException(
+        400,
+        'Identificatore annuncio non valido.',
+      );
+    }
+
+    final annuncio = annunci.findById(annuncioId);
+
+    if (annuncio == null) {
+      throw const ApiException(
+        404,
+        'Annuncio non trovato.',
+      );
+    }
+
+    if (annuncio.aziendaId != azienda.id) {
+      throw const ApiException(
+        403,
+        'Non puoi consultare le candidature di questo annuncio.',
+      );
+    }
+
+    final risultati = candidature.byAnnuncio(annuncioId);
+
+    return jsonResponse(
+      risultati.map((candidatura) {
+        return candidatura.toPublicJson();
+      }).toList(),
+    );
   }
 
   Future<Response> _create(Request request, String id) async {
