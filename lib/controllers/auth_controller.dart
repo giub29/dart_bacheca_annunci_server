@@ -6,6 +6,7 @@ import '../services/password_service.dart';
 import '../utils/validators.dart';
 import '../errors/api_exception.dart';
 import '../services/token_service.dart';
+import '../middleware/auth_middleware.dart';
 
 class AuthController {
   final AziendaDao aziende;
@@ -18,6 +19,8 @@ class AuthController {
 
     router.post('/api/auth/register', _register);
     router.post('/api/auth/login', _login);
+    router.post('/api/auth/logout', guard(_logout));
+    router.get('/api/auth/me', guard(_me));
 
     return router;
   }
@@ -88,5 +91,19 @@ class AuthController {
       'token': token,
       'azienda': azienda.toPublicJson(),
     });
+  }
+
+  Response _me(Request request) {
+    final azienda = currentAzienda(request)!;
+
+    return jsonResponse(azienda.toPublicJson());
+  }
+
+  Response _logout(Request request) {
+    final token = currentToken(request)!;
+
+    tokens.revoke(token);
+
+    return Response(204);
   }
 }
