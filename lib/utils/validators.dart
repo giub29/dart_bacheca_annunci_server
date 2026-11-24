@@ -67,3 +67,45 @@ RegistrazioneInput validateRegister(Map<String, dynamic> body) {
     password: password,
   );
 }
+
+class AnnuncioInput {
+  final String titolo;
+  final String descrizione;
+
+  const AnnuncioInput({
+    required this.titolo,
+    required this.descrizione,
+  });
+}
+
+AnnuncioInput validateAnnuncio(Map<String, dynamic> body) {
+  final titolo = body['titolo'];
+  final descrizione = body['descrizione'];
+
+  if (titolo is! String || titolo.trim().isEmpty) {
+    throw const ApiException(422, 'Titolo obbligatorio.');
+  }
+
+  if (titolo.trim().length > 100) {
+    throw const ApiException(
+      422,
+      'Il titolo può contenere al massimo 100 caratteri.',
+    );
+  }
+
+  if (descrizione is! String || descrizione.trim().isEmpty) {
+    throw const ApiException(422, 'Descrizione obbligatoria.');
+  }
+
+  if (descrizione.trim().length > 5000) {
+    throw const ApiException(
+      422,
+      'La descrizione può contenere al massimo 5000 caratteri.',
+    );
+  }
+
+  return AnnuncioInput(
+    titolo: titolo.trim(),
+    descrizione: descrizione.trim(),
+  );
+}
