@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import '../errors/api_exception.dart';
 
 class CvService {
   final Directory directory;
@@ -44,5 +45,28 @@ class CvService {
     if (await file.exists()) {
       await file.delete();
     }
+  }
+
+  Future<List<int>> leggi(String nomeMemorizzato) async {
+    final formatoNome = RegExp(r'^[a-f0-9]{64}\.pdf$');
+
+    if (!formatoNome.hasMatch(nomeMemorizzato)) {
+      throw const FormatException(
+        'Nome del file CV memorizzato non valido.',
+      );
+    }
+
+    final file = File(
+      '${directory.path}/$nomeMemorizzato',
+    );
+
+    if (!await file.exists()) {
+      throw const ApiException(
+        404,
+        'Il curriculum non è disponibile.',
+      );
+    }
+
+    return await file.readAsBytes();
   }
 }

@@ -41,6 +41,17 @@ class CandidaturaController {
       },
     );
 
+    router.get(
+      '/api/candidature/<id>/cv',
+      (Request request, String id) {
+        return guard(
+          (Request authenticatedRequest) {
+            return _downloadCv(authenticatedRequest, id);
+          },
+        )(request);
+      },
+    );
+
     return router;
   }
 
@@ -78,6 +89,58 @@ class CandidaturaController {
       risultati.map((candidatura) {
         return candidatura.toPublicJson();
       }).toList(),
+    );
+  }
+
+  Future<Response> _downloadCv(Request request, String id) async {
+    final azienda = currentAzienda(request)!;
+
+    final candidaturaId = int.tryParse(id);
+
+    if (candidaturaId == null || candidaturaId <= 0) {
+      throw const ApiException(
+        400,
+        'Identificatore candidatura non valido.',
+      );
+    }
+
+    final candidatura = candidature.findById(candidaturaId);
+
+    if (candidatura == null) {
+      throw const ApiException(
+        404,
+        'Candidatura non trovata.',
+      );
+    }
+
+    final annuncio = annunci.findById(candidatura.annuncioId);
+
+    if (annuncio == null) {
+      throw const ApiException(
+        404,
+        'Annuncio non trovato.',
+      );
+    }
+
+    if (annuncio.aziendaId != azienda.id) {
+      throw const ApiException(
+        403,
+        'Non puoi accedere al curriculum di questa candidatura.',
+      );
+    }
+
+    final bytes = await cvService.leggi(
+      candidatura.cvNomeMemorizzato,
+    );
+
+    return Response.ok(
+      bytes,
+      headers: {
+        'content-type': 'application/pdf',
+        'content-disposition':
+            'attachment; filename="cv-${candidatura.id}.pdf"',
+        'cache-control': 'no-store',
+      },
     );
   }
 
