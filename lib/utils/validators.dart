@@ -1,0 +1,69 @@
+import 'dart:convert';
+
+import 'package:shelf/shelf.dart';
+
+import '../errors/api_exception.dart';
+
+Future<Map<String, dynamic>> readJsonObject(Request request) async {
+  final text = await request.readAsString();
+  final decoded = jsonDecode(text);
+
+  if (decoded is! Map<String, dynamic>) {
+    throw const FormatException('È richiesto un oggetto JSON.');
+  }
+
+  return decoded;
+}
+
+class RegistrazioneInput {
+  final String nome;
+  final String email;
+  final String password;
+
+  const RegistrazioneInput({
+    required this.nome,
+    required this.email,
+    required this.password,
+  });
+}
+
+final RegExp _emailPattern =
+RegExp(r'^[\w.+-]+@[\w-]+(\.[\w-]+)+$');
+
+final RegExp _passwordPattern =
+RegExp(r'^(?=.*[A-Za-z])(?=.*\d).{8,64}$');
+
+RegistrazioneInput validateRegister(Map<String, dynamic> body) {
+  final nome = body['nome'];
+  final email = body['email'];
+  final password = body['password'];
+
+  if (nome is! String || nome.trim().isEmpty) {
+    throw const ApiException(422, 'Nome azienda obbligatorio.');
+  }
+
+  if (nome.trim().length > 100) {
+    throw const ApiException(
+      422,
+      'Il nome azienda può contenere al massimo 100 caratteri.',
+    );
+  }
+
+  if (email is! String || !_emailPattern.hasMatch(email.trim())) {
+    throw const ApiException(422, 'Email non valida.');
+  }
+
+  if (password is! String || !_passwordPattern.hasMatch(password)) {
+    throw const ApiException(
+      422,
+      'La password deve contenere da 8 a 64 caratteri, '
+          'con almeno una lettera e un numero.',
+    );
+  }
+
+  return RegistrazioneInput(
+    nome: nome.trim(),
+    email: email.trim().toLowerCase(),
+    password: password,
+  );
+}

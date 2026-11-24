@@ -9,6 +9,8 @@ import 'package:shelf_router/shelf_router.dart';
 
 import '../lib/middleware/error_middleware.dart';
 
+import '../lib/controllers/auth_controller.dart';
+
 Future<void> main() async {
   final dataDirectory = Directory('data');
   await dataDirectory.create(recursive: true);
@@ -27,9 +29,17 @@ Future<void> main() async {
     return jsonResponse({'status': 'ok'});
   });
 
+  final api = Cascade()
+      .add(router.call)
+      .add(AuthController(aziende).router.call)
+      .add((Request request) {
+    return jsonError(404, 'Risorsa non trovata.');
+  })
+      .handler;
+
   final handler = const Pipeline()
       .addMiddleware(errorMiddleware())
-      .addHandler(router.call);
+      .addHandler(api);
 
   final server = await io.serve(
     handler,
