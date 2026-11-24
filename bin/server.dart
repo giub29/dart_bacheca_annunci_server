@@ -1,15 +1,13 @@
 import 'dart:io';
-
 import '../lib/dao/azienda_dao.dart';
 import '../lib/dao/json_store.dart';
-
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
-
 import '../lib/middleware/error_middleware.dart';
-
 import '../lib/controllers/auth_controller.dart';
+import '../lib/services/token_service.dart';
+import '../lib/middleware/auth_middleware.dart';
 
 Future<void> main() async {
   final dataDirectory = Directory('data');
@@ -20,7 +18,7 @@ Future<void> main() async {
   );
 
   await aziende.load();
-
+  final tokens = TokenService();
   print('Archivio aziende caricato.');
 
   final router = Router();
@@ -31,7 +29,7 @@ Future<void> main() async {
 
   final api = Cascade()
       .add(router.call)
-      .add(AuthController(aziende).router.call)
+      .add(AuthController(aziende, tokens).router.call)
       .add((Request request) {
     return jsonError(404, 'Risorsa non trovata.');
   })
@@ -39,6 +37,7 @@ Future<void> main() async {
 
   final handler = const Pipeline()
       .addMiddleware(errorMiddleware())
+      .addMiddleware(authMiddleware(tokens, aziende))
       .addHandler(api);
 
   final server = await io.serve(
