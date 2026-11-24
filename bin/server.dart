@@ -8,6 +8,8 @@ import '../lib/middleware/error_middleware.dart';
 import '../lib/controllers/auth_controller.dart';
 import '../lib/services/token_service.dart';
 import '../lib/middleware/auth_middleware.dart';
+import '../lib/dao/annuncio_dao.dart';
+import '../lib/controllers/annuncio_controller.dart';
 
 Future<void> main() async {
   final dataDirectory = Directory('data');
@@ -18,6 +20,12 @@ Future<void> main() async {
   );
 
   await aziende.load();
+
+  final annunci = AnnuncioDao(
+    JsonCollection('${dataDirectory.path}/annunci.json'),
+  );
+
+  await annunci.load();
   final tokens = TokenService();
   print('Archivio aziende caricato.');
 
@@ -30,6 +38,7 @@ Future<void> main() async {
   final api = Cascade()
       .add(router.call)
       .add(AuthController(aziende, tokens).router.call)
+      .add(AnnuncioController(annunci).router.call)
       .add((Request request) {
     return jsonError(404, 'Risorsa non trovata.');
   })
