@@ -7,5 +7,6 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
+  crypto: ^3.0.8
   shelf: any
   shelf_router: any

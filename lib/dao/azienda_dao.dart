@@ -1,5 +1,6 @@
 import '../models/azienda.dart';
 import 'json_store.dart';
+import '../errors/api_exception.dart';
 
 class AziendaDao {
   final JsonCollection _collection;
@@ -47,7 +48,7 @@ class AziendaDao {
     final normalizedEmail = email.trim().toLowerCase();
 
     if (emailExists(normalizedEmail)) {
-      throw StateError('Email già registrata.');
+      throw ApiException(409, 'Email già registrata.');
     }
 
     final azienda = Azienda(
