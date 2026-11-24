@@ -62,6 +62,27 @@ class JsonCollection {
     return operation;
   }
 
+  Future<void> addAndSave(Map<String, dynamic> item) {
+    final nuovoElemento = Map<String, dynamic>.from(item);
+
+    final operation = _queue.then((_) async {
+      final aggiornati = [
+        ..._items,
+        nuovoElemento,
+      ];
+
+      final content = const JsonEncoder.withIndent('  ').convert(aggiornati);
+
+      await _write(content);
+
+      _items.add(nuovoElemento);
+    });
+
+    _queue = operation.catchError((_) {});
+
+    return operation;
+  }
+
   Future<void> _write(String content) async {
     final temporaryFile = File('$path.tmp');
 

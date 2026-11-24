@@ -27,4 +27,22 @@ class CvService {
 
     return nomeMemorizzato;
   }
+
+  Future<void> elimina(String nomeMemorizzato) async {
+    final formatoNome = RegExp(r'^[a-f0-9]{64}\.pdf$');
+
+    if (!formatoNome.hasMatch(nomeMemorizzato)) {
+      throw const FormatException(
+        'Nome del file CV memorizzato non valido.',
+      );
+    }
+
+    final file = File(
+      '${directory.path}/$nomeMemorizzato',
+    );
+
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
 }

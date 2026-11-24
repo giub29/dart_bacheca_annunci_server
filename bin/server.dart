@@ -10,6 +10,9 @@ import '../lib/services/token_service.dart';
 import '../lib/middleware/auth_middleware.dart';
 import '../lib/dao/annuncio_dao.dart';
 import '../lib/controllers/annuncio_controller.dart';
+import '../lib/dao/candidatura_dao.dart';
+import '../lib/services/cv_service.dart';
+import '../lib/controllers/candidatura_controller.dart';
 
 Future<void> main() async {
   final dataDirectory = Directory('data');
@@ -20,6 +23,15 @@ Future<void> main() async {
   );
 
   await aziende.load();
+  final candidature = CandidaturaDao(
+    JsonCollection('${dataDirectory.path}/candidature.json'),
+  );
+
+  await candidature.load();
+
+  final cvService = CvService(
+    Directory('${dataDirectory.path}/cv'),
+  );
 
   final annunci = AnnuncioDao(
     JsonCollection('${dataDirectory.path}/annunci.json'),
@@ -39,10 +51,16 @@ Future<void> main() async {
       .add(router.call)
       .add(AuthController(aziende, tokens).router.call)
       .add(AnnuncioController(annunci).router.call)
+      .add(
+        CandidaturaController(
+          annunci,
+          candidature,
+          cvService,
+        ).router.call,
+      )
       .add((Request request) {
     return jsonError(404, 'Risorsa non trovata.');
-  })
-      .handler;
+  }).handler;
 
   final handler = const Pipeline()
       .addMiddleware(errorMiddleware())

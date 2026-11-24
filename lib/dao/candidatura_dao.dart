@@ -48,9 +48,7 @@ class CandidaturaDao {
       cvDimensione: cvDimensione,
     );
 
-    _collection.add(candidatura.toJson());
-
-    await _collection.save();
+    await _collection.addAndSave(candidatura.toJson());
 
     return candidatura;
   }
